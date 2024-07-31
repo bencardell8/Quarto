@@ -109,6 +109,67 @@ def check_opponent_win(board):
     # Check if the opponent has a winning move
     return check_win(board)
 
+class Node:
+    def __init__(self, board, move=None):
+        self.board = board
+        self.move = move
+        self.children = []
+        self.N = 0  # visit count
+        self.Q = 0  # total reward
+
+def mcts_ai_move(board, available_pieces):
+    # Initialize root node
+    root = Node(board)
+
+    # Run MCTS for a fixed number of iterations
+    for _ in range(iterations):
+        node = root
+        
+        # Selection phase
+        while node.children:
+            node = select_child(node)
+
+        # Expansion phase
+        if not node.children and not check_win(node.board) and len(available_pieces) > 0:
+            piece = random.choice(available_pieces)
+            position = random.choice(get_available_positions(node.board))
+            new_board = node.board.copy()
+            new_board[position[0]][position[1]] = piece
+            new_node = Node(new_board, (position, piece))
+            node.children.append(new_node)
+            node = new_node
+
+        # Simulation phase
+        simulate_result = simulate(node.board, available_pieces)
+
+        # Backpropagation phase
+        while node is not None:
+            node.N += 1
+            node.Q += simulate_result
+            node = node.parent
+
+    # Action selection phase
+    best_child = max(root.children, key=lambda child: child.N)
+    return best_child.move
+
+def simulate(board, available_pieces):
+    # Perform rollout simulation with random moves
+    sim_board = board.copy()
+    sim_pieces = available_pieces.copy()
+
+    while not check_win(sim_board) and len(sim_pieces) > 0:
+        piece = random.choice(sim_pieces)
+        position = random.choice(get_available_positions(sim_board))
+        sim_board[position[0]][position[1]] = piece
+        sim_pieces.remove(piece)
+
+    if check_win(sim_board):
+        return 1  # win
+    elif len(sim_pieces) == 0:
+        return 0  # draw
+    else:
+        return -1  # loss
+
 # Function to play the game with the user against an AI
 def play_game_with_user(ai):
     board = [[None for _ in range(4)] for _ in range(4)]
@@ -214,4 +275,4 @@ def play_game(ai1, ai2):
 #play_game_with_user(random_ai_move)
 
 # Running the game with random AI playing against itself
-play_game(heuristic_ai_move, random_ai_move)
+play_game(mcts_ai_move, random_ai_move)
