@@ -1,16 +1,16 @@
 import random
+from tkinter import *
 
-# Define the pieces and the board
+#Initialize pieces and board
 pieces = [(t, h, s, l) for t in (0, 1) for h in (0, 1) for s in (0, 1) for l in (0, 1)]
-board = [[None for _ in range(4)] for _ in range(4)]
+board = [[None for i in range(4)] for i in range(4)]
 
-# Function to format a piece for display
 def format_piece(piece):
     if piece is None:
         return "    "
     return ''.join(map(str, piece))
 
-# Function to print the board
+#Print out board in console
 def print_board(board):
     print("    0       1       2       3  ")
     print("  -----------------------------")
@@ -22,7 +22,6 @@ def print_board(board):
         print("  -----------------------------")
     print()
 
-# Function to check if there's a win condition
 def check_win(board):
     lines = []
 
@@ -39,22 +38,20 @@ def check_win(board):
                 return True
     return False
 
-# Function to get available positions on the board
 def get_available_positions(board):
     return [(r, c) for r in range(4) for c in range(4) if board[r][c] is None]
 
-# Function to get available pieces
 def get_available_pieces(pieces, used_pieces):
     return [piece for piece in pieces if piece not in used_pieces]
 
-# Random AI move
+#Make a random move
 def random_ai_move(board, available_pieces):
     position = random.choice(get_available_positions(board))
     piece = random.choice(available_pieces)
     return position, piece
 
 def heuristic_ai_move(board, available_pieces):
-    # Check for a winning move
+    #Win if possible
     for position in get_available_positions(board):
         for piece in available_pieces:
             board_copy = [row[:] for row in board]
@@ -62,7 +59,7 @@ def heuristic_ai_move(board, available_pieces):
             if check_win(board_copy):
                 return position, piece
 
-    # Check for a blocking move
+    #Block the player from winning
     for position in get_available_positions(board):
         for piece in available_pieces:
             board_copy = [row[:] for row in board]
@@ -70,43 +67,91 @@ def heuristic_ai_move(board, available_pieces):
             if check_opponent_win(board_copy):
                 return position, piece
 
-    # Fallback to random selection if no winning or blocking move is found
+    #If no blocking or winning move, do random instead
     return random_ai_move(board, available_pieces)
 
 def check_opponent_win(board):
-    # Check if the opponent has a winning move
     return check_win(board)
 
-# Function to play the game with the user against an AI
+
+
+#User vs AI
 def play_game_with_user(ai):
-    board = [[None for _ in range(4)] for _ in range(4)]
+    
+    
+    
+    
+    #board = [[None for _ in range(4)] for _ in range(4)]
     used_pieces = []
     current_piece = random.choice(pieces)
     turn = 0
+
+    #GUI stuff
+    root = Tk()
+    root.title("Quarto")
+    root.resizable(0,0)
+    #root.geometry("300x300")
+    # button = tk.Button(root, text="Click me")
+    # button.pack(padx=20, pady=20)
+
+    b = [
+        [0,0,0,0],
+        [0,0,0,0],
+        [0,0,0,0],
+        [0,0,0,0]]
+ 
+    #text for buttons
+    states = [
+        [0,0,0,0],
+        [0,0,0,0],
+        [0,0,0,0],
+        [0,0,0,0]]
+    
+    for i in range(4):
+        for j in range(4): 
+                                            
+            b[i][j] = Button(
+                            height = 4, width = 8, 
+                            font = ("Helvetica","20"),
+                            command = lambda i=i, j=j: b[i][j].config(text=current_piece),
+                            state= DISABLED)
+            b[i][j].grid(row = i, column = j)
 
     while True:
         print_board(board)
         print(f"Current piece to place: {current_piece}")
 
-        if turn % 2 == 0:  # User's turn
+        #Users turn
+        if turn % 2 == 0:
+            for i in range(4):
+                for j in range(4):
+                    b[i][j]['state'] = NORMAL
             while True:
-                user_row = int(input("Enter row (0-3): "))
-                user_col = int(input("Enter column (0-3): "))
-                if 0 <= user_row < 4 and 0 <= user_col < 4 and board[user_row][user_col] is None:
+                row = int(input("Row: "))
+                column = int(input("Column: "))
+                if 0 <= row < 4 and 0 <= column < 4 and board[row][column] is None:
                     break
                 else:
-                    print("Invalid position or position already occupied. Try again.")
+                    print("Please enter a valid input")
 
-            board[user_row][user_col] = current_piece
-            used_pieces.append(current_piece)  # Add the piece to used_pieces immediately
+            board[row][column] = current_piece
+            used_pieces.append(current_piece)
 
-        else:  # AI's turn
+
+            # label = Label(root, text=(turn))
+            # label.pack()
+
+        #AIs turn
+        else:
             position, piece = ai(board, get_available_pieces(pieces, used_pieces))
             board[position[0]][position[1]] = current_piece
-            #used_pieces.append(current_piece)  # Add the piece to used_pieces immediately
-            current_piece = piece  # AI sets the next piece for the user
+            current_piece = piece
+            
+            
+            # label = Label(root, text=(turn))
+            # label.pack()
 
-        # Check for a win
+        #Win function
         if check_win(board):
             print_board(board)
             if turn % 2 == 0:
@@ -115,31 +160,38 @@ def play_game_with_user(ai):
                 print("AI wins!")
             break
 
-        # Check for a draw
+        #Draw function
         if len(used_pieces) == len(pieces):
             print_board(board)
             print("It's a draw!")
             break
 
-        #User picking next piece for AI
+        #Pick next piece for AI
         if turn % 2 == 0:
+            for i in range(4):
+                for j in range(4):
+                    b[i][j]['state'] = DISABLED
             available_pieces = get_available_pieces(pieces, used_pieces)
             print_board(board)
             print(f"Remaining pieces: {get_available_pieces(pieces, used_pieces)}")
             userinput = input("Select a piece for your opponent: ") 
-            index = available_pieces.index(eval(userinput)) #Convert user input to tuple
+            index = available_pieces.index(eval(userinput))
             current_piece = available_pieces[index]
+            #current_piece = random.choice(available_pieces)
             used_pieces.append(current_piece)
         turn += 1
+    root.mainloop()
         
-# Function to play the game with two AIs
+
+
+#AI vs AI
 def play_game(ai1, ai2, runs):
     ai1Counter = 0
     ai2Counter = 0
     drawCounter = 0
 
     for i in range(runs):
-        board = [[None for _ in range(4)] for _ in range(4)]
+        #board = [[None for _ in range(4)] for _ in range(4)]
         used_pieces = []
         current_piece = random.choice(pieces)
         turn = 0
@@ -151,25 +203,21 @@ def play_game(ai1, ai2, runs):
 
             print(f"Current piece to place: {current_piece}")
 
-            # Determine which AI is playing this turn
             if turn % 2 == 0:
                 ai = ai1
             else:
                 ai = ai2
-            #ai = ai1 if turn % 2 == 0 else ai2
 
-            # AI makes a move
             position, piece = ai(board, get_available_pieces(pieces, used_pieces))
 
             if turn == 0:
                 piece = current_piece
             current_piece = piece
-            # Place the piece on the board
+
             board[position[0]][position[1]] = current_piece
             used_pieces.append(current_piece)
             
 
-            # Check for a win
             if check_win(board):
                 print_board(board)
                 if turn % 2 == 0:
@@ -178,18 +226,14 @@ def play_game(ai1, ai2, runs):
                 else:
                     print("AI2 wins!")
                     ai2Counter += 1
-                #print(f"{'AI1' if turn % 2 == 0 else 'AI2'} wins!")
                 break
 
-            # Check for a draw
             if len(used_pieces) == len(pieces):
                 print_board(board)
                 print("It's a draw!")
                 drawCounter += 1
                 break
 
-            # Prepare for the next turn
-            
             turn += 1
 
     print("\nAI1 wins:", ai1Counter)
@@ -198,11 +242,8 @@ def play_game(ai1, ai2, runs):
 
 
 
-# Running the game with a user playing against the random AI
 play_game_with_user(heuristic_ai_move)
-
-# Running the game with random AI playing against itself
-#play_game(heuristic_ai_move, random_ai_move, 100)
+#play_game(heuristic_ai_move, heuristic_ai_move, 100)
 
 
 
