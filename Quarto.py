@@ -112,9 +112,8 @@ def play_game_with_user(ai):
                                             
             b[i][j] = Button(
                             height = 4, width = 8, 
-                            font = ("Helvetica","20"),
-                            command = lambda i=i, j=j: b[i][j].config(text=current_piece),
-                            state= DISABLED)
+                            command = lambda i=i, j=j: b[i][j].config(text=current_piece)
+                            )
             b[i][j].grid(row = i, column = j)
 
     while True:
@@ -135,6 +134,7 @@ def play_game_with_user(ai):
                     print("Please enter a valid input")
 
             board[row][column] = current_piece
+            b[row][column].config(text=current_piece, state=DISABLED)
             used_pieces.append(current_piece)
 
 
@@ -145,6 +145,8 @@ def play_game_with_user(ai):
         else:
             position, piece = ai(board, get_available_pieces(pieces, used_pieces))
             board[position[0]][position[1]] = current_piece
+            b[position[0]][position[1]].config(text=current_piece, state=DISABLED)
+            root.update()
             current_piece = piece
             
             
