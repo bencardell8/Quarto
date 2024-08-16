@@ -81,6 +81,7 @@ def play_game_with_user(ai):
     used_pieces = []
     occupiedPositions = []
     starting_piece = random.choice(pieces)
+    used_pieces.append(starting_piece)
     global turn
     turn = 0
 
@@ -99,7 +100,7 @@ def play_game_with_user(ai):
 
 
     label_text = StringVar()
-    label_text.set(f"Piece to play: {starting_piece}") #Display the current piece the user must place
+    label_text.set(f"Piece to play: {" ".join(map(str,starting_piece))}") #Display the current piece the user must place
 
     label = Label(root, textvariable=label_text)
     label.grid(row=1, column=0, columnspan=4, pady=(10, 10))
@@ -110,6 +111,8 @@ def play_game_with_user(ai):
         global turn
         
         current_piece = button["text"]
+        #print(type(current_piece))
+        used_pieces.append(tuple(map(int, current_piece.split(' '))))
         button.destroy() #Remove pressed button from GUI
         buttons.remove(button) #Remove from button list (prevents error!)
         for button in buttons: #Iterate through list
@@ -125,8 +128,8 @@ def play_game_with_user(ai):
         global turn 
         global board       
         if turn != 0:  
-            print("Next piece:", nextPiece)
-            b[i][j].config(text=nextPiece)
+            print("Next piece:", " ".join(nextPiece))
+            b[i][j].config(text=" ".join(nextPiece))
             board[i][j] = tuple(map(int, list(nextPiece)))  # Update board with the selected piece
         else:
              b[i][j].config(text=starting_piece)
@@ -136,8 +139,18 @@ def play_game_with_user(ai):
         print(board)
         occupiedPositions.append(b[i][j])
 
+        #Win function
         if check_win(board):
-            label_text.set(f"{'User' if turn % 2 == 0 else 'AI'} wins!")  # Update GUI prompt
+            print_board(board)
+            if turn % 2 == 0:
+                print("User wins!")
+                label_text.set("User wins!") #Update GUI prompt
+            else:
+                print("AI wins!")
+                label_text.set("AI wins!") #Update GUI prompt
+            for i in range(4): #Loop through all buttons
+                for j in range(4):
+                    b[i][j]['state'] = DISABLED #Enable all game board spaces that are unoccupied
             return
     
         #print(occupiedPositions)
@@ -216,12 +229,21 @@ def play_game_with_user(ai):
         global nextPiece
         global turn
         global board
+        
         position, piece = ai(board, get_available_pieces(pieces, used_pieces))
         b[position[0]][position[1]].config(text=current_piece, state=DISABLED)
         current_piece = current_piece.replace(" ", "")
         board[position[0]][position[1]] = tuple(map(int, list(current_piece)))  # Update board with the AI's move
+        #used_pieces.append(tuple(map(int, list(current_piece))))
+
+        #print(type(used_pieces[0]))
+
+        print("avaliable pieces: ", get_available_pieces(pieces, used_pieces))
+        print("used pieces: ", used_pieces)
+        used_pieces.append(piece)
         # print(piece)
         piece = ''.join(map(str, piece))
+        
         # print(piece)
         for button in buttons:
             #print(button['text'])
@@ -236,7 +258,7 @@ def play_game_with_user(ai):
         nextPiece = current_piece
 
         print("Current Piece: ", current_piece)
-        label_text.set(f"Piece to play: {current_piece}")
+        label_text.set(f"Piece to play: {" ".join(current_piece)}")
         root.update()
         print("Current Piece2: ", current_piece)
 
@@ -250,6 +272,10 @@ def play_game_with_user(ai):
             else:
                 print("AI wins!")
                 label_text.set("AI wins!") #Update GUI prompt
+            for i in range(4): #Loop through all buttons
+                for j in range(4):
+                    b[i][j]['state'] = DISABLED #Enable all game board spaces that are unoccupied
+            return
             
 
         #Draw function
@@ -262,227 +288,6 @@ def play_game_with_user(ai):
         print("Turn: ", turn)
         user_turn()
     root.mainloop()
-
-
-play_game_with_user(heuristic_ai_move)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-# #User vs AI (using GUI)
-# def play_game_with_user(ai):
-    
-#     #board = [[None for _ in range(4)] for _ in range(4)]
-#     used_pieces = []
-#     occupiedPositions = []
-#     current_piece = random.choice(pieces)
-#     turn = 0
-
-#     #GUI stuff
-#     root = Tk()
-#     root.title("Quarto")
-#     root.resizable(0,0)
-
-#     #Button for help on gameplay
-#     def how_to_play():
-#         howToPlay = Toplevel(root) #Opens up a new GUI window when clicked
-#         howToPlay.title("How To Play Quarto") #Title for help
-
-#     howToPlayButton = Button(root, text="How To Play", command=how_to_play) 
-#     howToPlayButton.grid(row=0, column=0, columnspan=4, pady=(10, 10)) #Add help button to GUI grid
-
-
-#     label_text = StringVar()
-#     label_text.set(f"Piece to play: {current_piece}") #Display the current piece the user must place
-
-#     label = Label(root, textvariable=label_text)
-#     label.grid(row=1, column=0, columnspan=4, pady=(10, 10))
-
-#     #Function for selecting piece for opponent
-#     def pickPiece(button):
-#         button.destroy() #Remove pressed button from GUI
-#         buttons.remove(button) #Remove from button list (prevents error!)
-#         for button in buttons: #Iterate through list
-#             button.config(state=DISABLED) #Disable all buttons (so can only press one per turn)
-
-#     def pickPosition(b, i, j):
-#         # global row
-#         # global column
-#         b[i][j].config(text=current_piece)
-#         occupiedPositions.append(b[i][j])
-#         #print(occupiedPositions)
-#         for i in range(4): #Loop through all buttons
-#                 for j in range(4):
-#                     b[i][j]['state'] = DISABLED #Set the game board (buttons) to disabled so user can't click it
-#         # row = i
-#         # column = j
-#         for button in buttons: #Iterate through list
-#                 button.config(state=NORMAL) #Enable all buttons to pick piece for opponent
-        
-#         aiTurn = True
-
-#     available_pieces = get_available_pieces(pieces, used_pieces)
-#     columnPiece = 0
-#     rowPiece = 6
-#     buttons = []
-
-#     for i, piece in enumerate(available_pieces):
-#         button = Button(root, text=piece, state=DISABLED)
-#         button.grid(row=rowPiece, column=columnPiece)
-#         button.config(command=lambda button=button: pickPiece(button))
-#         buttons.append(button)
-
-        
-#         columnPiece += 1
-#         if columnPiece >= 4:
-#             columnPiece = 0
-#             rowPiece += 1
-
-#     b = [
-#         [0,0,0,0],
-#         [0,0,0,0],
-#         [0,0,0,0],
-#         [0,0,0,0]]
- 
-#     #text for buttons
-#     states = [
-#         [0,0,0,0],
-#         [0,0,0,0],
-#         [0,0,0,0],
-#         [0,0,0,0]]
-    
-#     for i in range(4):
-#         for j in range(4): 
-                                            
-#             b[i][j] = Button(height = 4, width = 8, command = lambda i=i, j=j: pickPosition(b, i, j))
-#             b[i][j].grid(row = i+2, column = j)
-
-#     while True:
-#         print_board(board)
-#         print(f"Current piece to place: {current_piece}")
-
-#         #Users turn
-#         if turn % 2 == 0:
-#             for i in range(4): #Loop through all buttons
-#                 for j in range(4):
-#                     if b[i][j]["text"] == "":
-#                         b[i][j]['state'] = NORMAL #Enable all game board spaces that are unoccupied
-                        
-#             while True:
-#                 row = int(input("Row: "))
-#                 column = int(input("Column: "))
-#                 if 0 <= row < 4 and 0 <= column < 4 and board[row][column] is None:
-#                     break
-#                 else:
-#                     print("Please enter a valid input")
-
-#             board[row][column] = current_piece
-#             b[row][column].config(text=current_piece, state=DISABLED)
-#             used_pieces.append(current_piece)
-
-
-#         #AIs turn
-#         else:
-#             position, piece = ai(board, get_available_pieces(pieces, used_pieces))
-#             board[position[0]][position[1]] = current_piece
-#             b[position[0]][position[1]].config(text=current_piece, state=DISABLED)
-#             print(piece)
-#             piece = ''.join(map(str, piece))
-#             print(piece)
-#             for button in buttons:
-#                 print(button['text'])
-#                 if button['text'].replace(" ", "") == piece:
-#                     button.invoke()
-#                     root.update()
-#                 else:
-#                     print("No button found")
-            
-#             current_piece = piece
-#             label_text.set(f"Piece to play: {current_piece}")
-#             root.update()
-
-
-#         #Win function
-#         if check_win(board):
-#             print_board(board)
-#             if turn % 2 == 0:
-#                 print("User wins!")
-#                 label_text.set("User wins!") #Update GUI prompt
-#             else:
-#                 print("AI wins!")
-#                 label_text.set("AI wins!") #Update GUI prompt
-#             break
-
-#         #Draw function
-#         if len(used_pieces) == len(pieces): #If all pieces used up
-#             print_board(board)
-#             print("It's a draw!")
-#             label_text.set("It's a draw!") #Update GUI prompt
-#             break
-
-#         #Pick next piece for AI
-#         if turn % 2 == 0:
-            
-
-#             # for button in buttons: #Iterate through list
-#             #     button.config(state=NORMAL) #Enable all buttons to pick piece for opponent
-
-#             available_pieces = get_available_pieces(pieces, used_pieces)
-#             print_board(board)
-#             print(f"Remaining pieces: {get_available_pieces(pieces, used_pieces)}")
-
-
-#             label_text.set("Select a piece for your opponent") #Update GUI prompt
-#             root.update()
-            
-#             userinput = input("Select a piece for your opponent: ") 
-#             index = available_pieces.index(eval(userinput))
-#             current_piece = available_pieces[index]
-#             #current_piece = random.choice(available_pieces)
-#             used_pieces.append(current_piece)
-#         turn += 1
-#     root.mainloop()
-
-
-
-
-
-
-
-
-
-
-
 
 
 #User vs AI (Using console)
@@ -597,7 +402,9 @@ def play_game(ai1, ai2, runs):
 
 
 
-#play_game(heuristic_ai_move, heuristic_ai_move, 100)
+play_game(random_ai_move, heuristic_ai_move, 100)
+#play_game_with_user(heuristic_ai_move)
+
 
 
 
